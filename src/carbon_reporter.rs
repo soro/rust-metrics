@@ -4,7 +4,7 @@ use std::thread;
 use std::sync::Arc;
 use meter::Meter;
 use reporter::Reporter;
-use counter::StdCounter;
+use counters;
 use gauge::StdGauge;
 use meter::MeterSnapshot;
 use histogram::Histogram;
@@ -73,24 +73,24 @@ fn send_meter_metric( metric_name: String,
 }
 
 fn send_gauge_metric(metric_name: String,
-     gauge: StdGauge,
-     carbon:&mut Carbon,
-     prefix_str: & 'static str,
-     ts: Timespec) {
-         carbon
-         .write(prefix(format!("{}", metric_name), prefix_str),
-         gauge.value.to_string(),
-          ts);
+    gauge: StdGauge,
+    carbon:&mut Carbon,
+    prefix_str: & 'static str,
+    ts: Timespec) {
+    carbon
+        .write(prefix(format!("{}", metric_name), prefix_str),
+        gauge.value.to_string(),
+        ts);
 }
 
 fn send_counter_metric(metric_name: String,
-    counter: StdCounter,
+    counter: isize,
     carbon:& mut Carbon,
     prefix_str: & 'static str,
-    ts: Timespec){
-        carbon
+    ts: Timespec) {
+    carbon
         .write(prefix(format!("{}", metric_name), prefix_str),
-        counter.value.to_string(),
+        counter.to_string(),
         ts);
 }
 fn send_histogram_metric(metric_name: String,
@@ -190,7 +190,7 @@ impl CarbonReporter {
 #[cfg(test)]
 mod test {
     use meter::{Meter, StdMeter};
-    use counter::{Counter, StdCounter};
+    use counters::{self, Counter};
     use gauge::{Gauge, StdGauge};
     use registry::{Registry, StdRegistry};
     use reporter::Reporter;
@@ -204,7 +204,7 @@ mod test {
         let m = StdMeter::new();
         m.mark(100);
 
-        let mut c: StdCounter = StdCounter::new();
+        let mut c = counters::SimpleCounter::new();
         c.inc(1);
 
         let mut g: StdGauge = StdGauge { value: 0f64 };

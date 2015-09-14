@@ -16,6 +16,7 @@ time = "0.1.32"
 num = "0.1.27"
 histogram = "0.1.6"
 log = "0.3.2"
+rand = "0.3"
 
 [[test]]
 name = "test"

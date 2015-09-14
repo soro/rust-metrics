@@ -62,7 +62,7 @@ impl ConsoleReporter {
 mod test {
 
     use meter::{Meter, StdMeter};
-    use counter::{Counter, StdCounter};
+    use counters::{Counter, SimpleCounter};
     use gauge::{Gauge, StdGauge};
     use registry::{Registry, StdRegistry};
     use reporter::{ConsoleReporter, Reporter};
@@ -75,7 +75,7 @@ mod test {
         let m = StdMeter::new();
         m.mark(100);
 
-        let mut c: StdCounter = StdCounter::new();
+        let mut c: SimpleCounter = SimpleCounter::new();
         c.inc(1);
 
         let mut g: StdGauge = StdGauge { value: 0f64 };
