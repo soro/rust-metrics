@@ -1,10 +1,12 @@
 #![feature(unique)]
 #![feature(heap_api)]
+#![feature(test)]
 
 extern crate time;
 extern crate num;
 extern crate histogram;
 extern crate rand;
+extern crate test;
 
 pub mod counters;
 pub mod gauge;

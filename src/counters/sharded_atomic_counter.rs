@@ -117,36 +117,38 @@ mod tests {
     use super::ShardedAtomicCounter;
     use std::thread;
     use std::sync::Arc;
+    use test::Bencher;
+    use counters::counter::test_utils::*;
 
     fn spawn_incr(sc: Arc<ShardedAtomicCounter>, n: isize) -> thread::JoinHandle<()> {
         thread::spawn(move || {
             for _ in 0..n { sc.inc(1) }
         })
     }
+    
+    fn ctor() -> ShardedAtomicCounter { ShardedAtomicCounter::new(2) }
 
     #[test]
     fn test_sharded_counter() {
-        let c = Arc::new(ShardedAtomicCounter::new(2));
 
         let thread_count = 16;
         let iter_count = 1000000;
 
-
-         let mut children = vec![];
-
-         for _ in 0..thread_count {
-             children.push(spawn_incr(c.clone(), iter_count));
-         }
-
-         for child in children {
-             let res = child.join();
-             assert!(res.is_ok());
-         }
+        let c = test_counter(&ctor, iter_count, thread_count);
 
         assert!(c.snapshot() as isize == thread_count * iter_count);
 
         c.clear();
 
         assert!(c.snapshot() as isize == 0);
+    }
+
+    #[bench]
+    fn bench_sharded_counter(b: &mut Bencher) {
+
+        let thread_count = 16;
+        let iter_count = 10000;
+        
+        b.iter(|| { test_counter(&ctor, iter_count, thread_count) })
     }
 }
