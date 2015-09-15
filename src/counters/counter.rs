@@ -2,12 +2,13 @@ extern crate num;
 
 use metric::{Metric, MetricValue};
 
+// Implementations have to offer safe interior mutability
 pub trait Counter : Send + Sync {
-    fn clear(&mut self);
+    fn clear(&self);
 
-    fn dec(&mut self, value: isize);
+    fn dec(&self, value: isize);
 
-    fn inc(&mut self, value: isize);
+    fn inc(&self, value: isize);
 
     fn snapshot(&self) -> isize;
 }

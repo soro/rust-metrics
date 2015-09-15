@@ -62,7 +62,7 @@ impl ConsoleReporter {
 mod test {
 
     use meter::{Meter, StdMeter};
-    use counters::{Counter, SimpleCounter};
+    use counters::{Counter, AtomicCounter};
     use gauge::{Gauge, StdGauge};
     use registry::{Registry, StdRegistry};
     use reporter::{ConsoleReporter, Reporter};
@@ -75,10 +75,10 @@ mod test {
         let m = StdMeter::new();
         m.mark(100);
 
-        let mut c: SimpleCounter = SimpleCounter::new();
+        let mut c = AtomicCounter::new();
         c.inc(1);
 
-        let mut g: StdGauge = StdGauge { value: 0f64 };
+        let mut g = StdGauge { value: 0f64 };
         g.update(1.2);
 
         let mut h = Histogram::new(

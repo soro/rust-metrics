@@ -93,15 +93,15 @@ impl Drop for ShardedAtomicCounter {
 }
 
 impl Counter for ShardedAtomicCounter {
-    fn clear(&mut self) {
+    fn clear(&self) {
         self.clear()
     }
 
-    fn dec(&mut self, value: isize) {
+    fn dec(&self, value: isize) {
         self.add(-value)
     }
 
-    fn inc(&mut self, value: isize) {
+    fn inc(&self, value: isize) {
         self.add(value)
     }
 
@@ -113,13 +113,14 @@ impl Counter for ShardedAtomicCounter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use counters::Counter;
     use super::ShardedAtomicCounter;
     use std::thread;
     use std::sync::Arc;
 
     fn spawn_incr(sc: Arc<ShardedAtomicCounter>, n: isize) -> thread::JoinHandle<()> {
         thread::spawn(move || {
-            for _ in 0..n { sc.add(1) }
+            for _ in 0..n { sc.inc(1) }
         })
     }
 
@@ -134,7 +135,6 @@ mod tests {
          let mut children = vec![];
 
          for _ in 0..thread_count {
-             // Spin up another thread
              children.push(spawn_incr(c.clone(), iter_count));
          }
 

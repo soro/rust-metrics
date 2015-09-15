@@ -45,7 +45,7 @@ impl<'a> StdRegistry<'a> {
 #[cfg(test)]
 mod test {
     use meter::{Meter, StdMeter};
-    use counters::{Counter, SimpleCounter};
+    use counters::{Counter, AtomicCounter};
     use gauge::{Gauge, StdGauge};
     use registry::{Registry, StdRegistry};
     use histogram::*;
@@ -69,7 +69,7 @@ mod test {
     #[test]
     fn counter() {
         let mut r = StdRegistry::new();
-        let mut c: SimpleCounter = SimpleCounter::new();
+        let mut c = AtomicCounter::new();
         c.inc(1);
         r.insert("counter1", c);
     }

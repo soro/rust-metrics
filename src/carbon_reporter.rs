@@ -204,7 +204,7 @@ mod test {
         let m = StdMeter::new();
         m.mark(100);
 
-        let mut c = counters::SimpleCounter::new();
+        let mut c = counters::AtomicCounter::new();
         c.inc(1);
 
         let mut g: StdGauge = StdGauge { value: 0f64 };
