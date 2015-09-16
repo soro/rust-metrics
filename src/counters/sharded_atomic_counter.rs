@@ -135,7 +135,7 @@ mod tests {
     use test::Bencher;
     use counters::counter::test_utils::*;
 
-    fn ctor() -> ShardedAtomicCounter { ShardedAtomicCounter::new(2) }
+    fn ctor() -> ShardedAtomicCounter { ShardedAtomicCounter::new(4) }
 
     #[test]
     fn test_sharded_counter() {
@@ -156,7 +156,7 @@ mod tests {
     fn bench_sharded_counter(b: &mut Bencher) {
 
         let thread_count = 16;
-        let iter_count = 10000;
+        let iter_count = 100000;
         
         b.iter(|| { test_counter(&ctor, iter_count, thread_count) })
     }

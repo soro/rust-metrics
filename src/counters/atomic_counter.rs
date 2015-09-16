@@ -49,7 +49,7 @@ mod tests {
     #[bench]
     fn bench_atomic_counter(b: &mut Bencher) {
         let thread_count = 16;
-        let iter_count = 10000;
+        let iter_count = 100000;
 
         b.iter(|| { test_counter(&ctor, iter_count, thread_count) })
     }
