@@ -1,6 +1,7 @@
 use time::get_time;
 use time::Timespec;
 use std::sync::{Mutex, MutexGuard};
+use ewma::EWMA;
 use metric::{Metric, MetricValue};
 
 const WINDOW: [f64; 3] = [1f64, 5f64, 15f64];
@@ -17,6 +18,7 @@ pub struct MeterSnapshot {
 #[derive(Debug)]
 pub struct StdMeter {
     data: Mutex<MeterSnapshot>,
+    ewma: [EWMA; 3],
     start: Timespec
 }
 
@@ -60,11 +62,19 @@ impl Meter for StdMeter {
 
         s.count += n;
 
+        for i in (0..WINDOW.len()) {
+            self.ewma[i].update(n as usize);
+        }
+
         self.update_snapshot(s);
     }
 
     fn tick(&mut self) {
         let s = self.data.lock().unwrap();
+
+        for i in (0..WINDOW.len()) {
+            self.ewma[i].tick();
+        }
 
         self.update_snapshot(s);
     }
@@ -103,6 +113,10 @@ impl Metric for StdMeter {
 
 impl StdMeter {
     fn update_snapshot(&self, mut s: MutexGuard<MeterSnapshot>) {
+        for i in (0..WINDOW.len()) {
+            s.rates[i] = self.ewma[i].rate();
+        }
+
         let diff = get_time() - self.start;
         s.mean = s.count as f64 / diff.num_seconds() as f64;
     }
@@ -110,7 +124,9 @@ impl StdMeter {
     pub fn new() -> StdMeter {
         let data: MeterSnapshot = MeterSnapshot { count: 0i64, rates: [0f64, 0f64, 0f64], mean: 0f64 };
 
-        StdMeter { data: Mutex::new(data), start: get_time() }
+        let ewma: [EWMA; 3] = [EWMA::new(1f64), EWMA::new(5f64), EWMA::new(15f64)];
+
+        StdMeter { data: Mutex::new(data), ewma: ewma, start: get_time() }
     }
 }
 

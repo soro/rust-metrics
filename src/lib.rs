@@ -10,6 +10,7 @@ extern crate test;
 
 pub mod counters;
 pub mod gauge;
+pub mod ewma;
 pub mod meter;
 pub mod metric;
 pub mod registry;
