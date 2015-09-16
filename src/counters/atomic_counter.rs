@@ -16,7 +16,7 @@ impl Counter for AtomicCounter {
 
     fn inc(&self, value: isize) { self.value.fetch_add(value, Ordering::Release); }
 
-    fn dec(&self, value: isize) { self.inc(-value) }
+    fn dec(&self, value: isize) { self.value.fetch_sub(value, Ordering::Release); }
 
     fn snapshot(&self) -> isize { self.value.load(Ordering::Acquire) }
 }

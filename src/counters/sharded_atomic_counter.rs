@@ -36,16 +36,29 @@ impl ShardedAtomicCounter {
         base_ptr.offset(n & ((1 << log_size) - 1))
     }
 
-    unsafe fn update_and_balance(&self, val: isize, hc: *mut ThreadHash) {
-        let probe = (*hc).value;
-        let cell_ptr = ShardedAtomicCounter::index_ptr(*self.cells as *mut PaddedAtomicLong, self.log_size, probe);
-        let cell = &*cell_ptr;
-        let before = cell.value.load(Acquire);
-        let seen_at_update = cell.value.fetch_add(val, Release); // on x86 this ordering doesn't matter
-        if before != seen_at_update {
-            // there was contention, so lets try to find a better slot
-            *hc = ThreadHash::rehash(probe);
-        }
+    #[inline(always)]
+    fn sub_op(cell: &PaddedAtomicLong, val: isize) -> isize {
+        cell.value.fetch_sub(val, Release)
+    }
+
+    #[inline(always)]
+    fn add_op(cell: &PaddedAtomicLong, val: isize) -> isize {
+        cell.value.fetch_add(val, Release)
+    }
+
+    #[inline(always)]
+    unsafe fn op_and_balance(&self, val: isize, op: fn(&PaddedAtomicLong, isize) -> isize) {
+        PROBE.with(|thref| {
+            let th = thref.get();
+            let probe = (*th).value;
+            let raw_cell_ptr = ShardedAtomicCounter::index_ptr(*self.cells as *mut PaddedAtomicLong, self.log_size, probe);
+            let cell = &*raw_cell_ptr;
+            let seen_before = cell.value.load(Acquire);
+            let seen_at_xchg = op(cell, val);
+            if seen_before != seen_at_xchg {
+                *th = ThreadHash::rehash(probe);
+            }
+        })
     }
 
     pub fn new(log_size: usize) -> ShardedAtomicCounter {
@@ -59,9 +72,11 @@ impl ShardedAtomicCounter {
     }
 
     pub fn add(&self, val: isize) {
-        PROBE.with(|thref| {
-            unsafe { self.update_and_balance(val, thref.get()) }
-        })
+        unsafe { self.op_and_balance(val, ShardedAtomicCounter::add_op) };
+    }
+
+    pub fn sub(&self, val: isize) {
+        unsafe { self.op_and_balance(val, ShardedAtomicCounter::sub_op) };
     }
 
     // This is NOT guaranteed to yield the real current value
@@ -98,7 +113,7 @@ impl Counter for ShardedAtomicCounter {
     }
 
     fn dec(&self, value: isize) {
-        self.add(-value)
+        self.sub(value)
     }
 
     fn inc(&self, value: isize) {
