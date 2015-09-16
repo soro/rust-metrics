@@ -135,12 +135,6 @@ mod tests {
     use test::Bencher;
     use counters::counter::test_utils::*;
 
-    fn spawn_incr(sc: Arc<ShardedAtomicCounter>, n: isize) -> thread::JoinHandle<()> {
-        thread::spawn(move || {
-            for _ in 0..n { sc.inc(1) }
-        })
-    }
-    
     fn ctor() -> ShardedAtomicCounter { ShardedAtomicCounter::new(2) }
 
     #[test]
